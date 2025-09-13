@@ -16,8 +16,6 @@ from pymodbus import (
     pymodbus_apply_logging_config,
 )
 
-#pymodbus_apply_logging_config("DEBUG")
-
 parser = argparse.ArgumentParser(
 	prog='Powermeter',
 	description='Modbus power meter metric reader/server for Prometheus'
@@ -34,6 +32,10 @@ else:
 
 config = configparser.ConfigParser()
 config.read(config_path)
+
+modbus_logging=config.get("modbus", "logging")
+if modbus_logging:
+	pymodbus_apply_logging_config(modbus_logging)
 
 client = ModbusClient.ModbusSerialClient(
     config.get("modbus", "device"),

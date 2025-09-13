@@ -40,6 +40,7 @@ Supported options:
 - `bytesize`
 - `parity`
 - `stopbits`
+- [`logging`](https://pymodbus.readthedocs.io/en/latest/source/library/pymodbus.html#pymodbus.pymodbus_apply_logging_config)
 
 ### `[server]` section
 
