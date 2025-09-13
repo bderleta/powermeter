@@ -18,3 +18,40 @@ docker build -t powermeter .
 ```sh
 docker compose up -d
 ```
+
+## Configuration
+
+### `[modbus]` section
+
+See [pymodbus docs](https://pymodbus.readthedocs.io/en/latest/source/client.html#pymodbus.client.ModbusSerialClient).
+Supported options:
+- `framer`
+- `timeout`
+- `baudrate`
+- `bytesize`
+- `parity`
+- `stopbits`
+
+### `[server]` section
+
+Supported options:
+- `port` - HTTP port for listening to incoming requests
+
+### `[meters]` section
+
+Accepts entries in format `<device_id>=<type>`. Supported types:
+- `taiyedq`
+- `finder`
+- `eastron` 
+
+## Supported meters
+
+This service has been tested with following devices:
+- [Eastron SDM120M Modbus](https://www.eastroneurope.com/products/view/sdm120modbus)
+- [Finder 7M.24.8.230.0210](https://www.findernet.com/en/worldwide/series/7m-series-smart-energy-meters/type/type-7m-24-single-phase-bi-directional-energy-meters-with-backlit-lcd-display/)
+- [Taiye TAC1100/TAC2100](http://www.taiye-electric.com/productdetail/tac2100-single-phase-din-rail-energy-meter.html)
+
+
+## Supported RS485 adapters
+
+This service has been tested only with [Waveshare 17286](https://www.waveshare.com/usb-to-rs485.htm).
