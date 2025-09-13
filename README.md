@@ -19,6 +19,15 @@ docker build -t powermeter .
 docker compose up -d
 ```
 
+## Running without container
+
+```sh
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python ./main.py --config=<config-filename>
+```
+
 ## Configuration
 
 ### `[modbus]` section
