@@ -14,6 +14,7 @@ docker build -t powermeter .
 
 - Prepare .conf file (sample .conf files are included). Configure your meters, Modbus transmission settings and serial device.
 - Prepare compose.yml file for Docker Compose (you can take a look at one of included ones). Map your serial device for container to use.
-- Run ```sh
+- Run as a daemon:
+```sh
 docker compose up -d
 ```
