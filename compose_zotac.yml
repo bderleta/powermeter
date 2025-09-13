@@ -1,0 +1,11 @@
+services:
+    powermeter:
+        container_name: powermeter
+        image: powermeter
+        restart: unless-stopped
+        ports:
+            - "8765:8765"
+        volumes:
+            - ./powermeter_zotac.conf:/etc/opt/powermeter.conf
+        devices:
+            - /dev/serial/by-id/usb-FTDI_FT232R_USB_UART_B0032GI4-if00-port0:/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_B0032GI4-if00-port0

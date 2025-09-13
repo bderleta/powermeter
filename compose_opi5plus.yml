@@ -1,0 +1,11 @@
+services:
+    powermeter:
+        container_name: powermeter
+        image: powermeter
+        restart: unless-stopped
+        ports:
+            - "8765:8765"
+        volumes:
+            - ./powermeter_opi5plus.conf:/etc/opt/powermeter.conf
+        devices:
+            - /dev/serial/by-id/usb-FTDI_FT232R_USB_UART_B0031XNN-if00-port0:/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_B0031XNN-if00-port0
