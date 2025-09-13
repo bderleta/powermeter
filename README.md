@@ -46,6 +46,7 @@ Supported options:
 
 Supported options:
 - `port` - HTTP port for listening to incoming requests
+- `logging` (WIP)
 
 ### `[meters]` section
 

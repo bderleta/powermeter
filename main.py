@@ -8,6 +8,7 @@ import configparser
 import http.server
 import socketserver
 import argparse
+import logging
 
 import pymodbus.client as ModbusClient
 from pymodbus import (
@@ -40,16 +41,16 @@ if modbus_logging:
 client = ModbusClient.ModbusSerialClient(
     config.get("modbus", "device"),
     framer=config.get("modbus", "framer"),
-    timeout=int(config.get("modbus", "timeout")),
-    # retries=3,
-    baudrate=int(config.get("modbus", "baudrate")),
-    bytesize=int(config.get("modbus", "bytesize")),
+    baudrate=config.getint("modbus", "baudrate"),
+    bytesize=config.getint("modbus", "bytesize"),
     parity=config.get("modbus", "parity"),
-    stopbits=int(config.get("modbus", "stopbits")),
-    # handle_local_echo=False,
+    stopbits=config.getint("modbus", "stopbits"),
+    handle_local_echo=config.getboolean("modbus", "handle_local_echo", fallback=False),
+    timeout=config.getint("modbus", "timeout"),
+    retries=config.getint("modbus", "retries", fallback=3),
 )
 client.connect()
-print("Connected to Modbus")
+print("Connected to Modbus", file=sys.stderr)
 
 def from_T1(registers):
     return (registers[0])
@@ -206,7 +207,7 @@ def get_metrics():
     for meterAddrStr in config.options("meters"):
         meterType = config.get("meters", meterAddrStr);
         meterAddr = int(meterAddrStr)
-        print("Querying device %u" % meterAddr)
+        print("Querying device %u" % meterAddr, file=sys.stderr)
         try:
             lstart = time.time()
             if meterType == "finder":
@@ -222,16 +223,20 @@ def get_metrics():
                         m += line
             lend = time.time()
             ltimeline = "powermeter_meas_time{address=\"%03u\"} %g\n" % (meterAddr, lend - lstart)
-            print(ltimeline)
+            print(ltimeline, file=sys.stderr)
             m += ltimeline
         except ModbusException:
-            print("Device %u is not responding" % meterAddr)    
+            print("Device %u is not responding" % meterAddr, file=sys.stderr)    
     end = time.time()
     m += "powermeter_meas_time %g\n" % (end - start)
-    print("\tDone")
+    print("\tDone", file=sys.stderr)
     return m
 
 class MetricHttpRequestHandler(http.server.SimpleHTTPRequestHandler):
+	def log_message(self, format, *args):
+        if self.logging:
+            SimpleHTTPServer.SimpleHTTPRequestHandler.log_message(self, format, *args)
+	
     def do_GET(self):
         if self.path == '/metrics':
             self.send_response(200)
@@ -249,8 +254,9 @@ class MetricHttpRequestHandler(http.server.SimpleHTTPRequestHandler):
 
 try:
     metrics_handler = MetricHttpRequestHandler
-    metrics_port = int(config.get("server", "port"))
-    print("Binding metrics server to %u" % metrics_port)
+    metrics_handler.logging=config.getboolean("server", "logging", fallback=False)
+    metrics_port = config.getint("server", "port")
+    print("Binding metrics server to %u" % metrics_port, file=sys.stderr)
     socketserver.TCPServer.allow_reuse_address = True
     metrics_server = socketserver.TCPServer(("", metrics_port), metrics_handler)
     metrics_server.serve_forever()
@@ -258,4 +264,4 @@ except KeyboardInterrupt:
     pass
             
 client.close()
-print("Finished")
+print("Finished", file=sys.stderr)
