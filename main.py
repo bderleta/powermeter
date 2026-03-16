@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+import sys
 import math
 import struct
 import time
@@ -18,25 +19,25 @@ from pymodbus import (
 )
 
 parser = argparse.ArgumentParser(
-	prog='Powermeter',
-	description='Modbus power meter metric reader/server for Prometheus'
+    prog='Powermeter',
+    description='Modbus power meter metric reader/server for Prometheus'
 )
 parser.add_argument('--config', dest='config', type=str, help='Configuration file path', default='/etc/opt/powermeter.conf')
 args = parser.parse_args()
 fallback_config = os.path.abspath(os.path.dirname(__file__)) + "/powermeter.conf"
 if args.config and os.path.isfile(args.config):
-	config_path = args.config
+    config_path = args.config
 elif os.path.isfile(fallback_config):
-	config_path = fallback_config
+    config_path = fallback_config
 else:
-	raise FileNotFoundError
+    raise FileNotFoundError
 
 config = configparser.ConfigParser()
 config.read(config_path)
 
-modbus_logging=config.get("modbus", "logging")
+modbus_logging=config.get("modbus", "logging", fallback=None)
 if modbus_logging:
-	pymodbus_apply_logging_config(modbus_logging)
+    pymodbus_apply_logging_config(modbus_logging)
 
 client = ModbusClient.ModbusSerialClient(
     config.get("modbus", "device"),
@@ -155,7 +156,7 @@ def get_metrics_finder(client, meterAddr):
         value = from_T3(val.registers[6:8]) * 0.1
         m += "powermeter_%s{address=\"%03u\"} %g\n" % ("counter_n4", meterAddr, value) # Export reactive energy
     return m
-    
+
 # Accelerated retrieving of basic metrics
 def get_metrics_eastron(client, meterAddr):
     m = ""
@@ -179,7 +180,7 @@ def get_metrics_eastron(client, meterAddr):
         m += "powermeter_%s{address=\"%03u\"} %g\n" % ("counter_n3", meterAddr, value) # Import reactive energy
         value = from_modbus_float(val.registers[8:10]) * 1000.0
         m += "powermeter_%s{address=\"%03u\"} %g\n" % ("counter_n4", meterAddr, value) # Export reactive energy
-    return m    
+    return m
 
 def get_metrics():
     start = time.time()
@@ -226,17 +227,17 @@ def get_metrics():
             print(ltimeline, file=sys.stderr)
             m += ltimeline
         except ModbusException:
-            print("Device %u is not responding" % meterAddr, file=sys.stderr)    
+            print("Device %u is not responding" % meterAddr, file=sys.stderr)
     end = time.time()
     m += "powermeter_meas_time %g\n" % (end - start)
     print("\tDone", file=sys.stderr)
     return m
 
 class MetricHttpRequestHandler(http.server.SimpleHTTPRequestHandler):
-	def log_message(self, format, *args):
+    def log_message(self, format, *args):
         if self.logging:
             SimpleHTTPServer.SimpleHTTPRequestHandler.log_message(self, format, *args)
-	
+
     def do_GET(self):
         if self.path == '/metrics':
             self.send_response(200)
@@ -250,7 +251,7 @@ class MetricHttpRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.end_headers()
             content = "Not found"
             self.wfile.write(bytes(content, "utf8"))
-        return 
+        return
 
 try:
     metrics_handler = MetricHttpRequestHandler
@@ -262,6 +263,6 @@ try:
     metrics_server.serve_forever()
 except KeyboardInterrupt:
     pass
-            
+
 client.close()
 print("Finished", file=sys.stderr)
